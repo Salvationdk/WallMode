@@ -1,38 +1,73 @@
-name: Build signed APK
+name: Build and test WallMode
 
 on:
   push:
+    branches: [master]
+  pull_request:
   workflow_dispatch:
+    inputs:
+      publish_prerelease:
+        description: 'Publish a signed development pre-release (requires signing secrets)'
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: read
 
 jobs:
-  apk:
-    if: github.repository == 'rvbcrs/WallMode'
+  verify:
     runs-on: ubuntu-24.04
     timeout-minutes: 45
-    outputs:
-      artifact-name: WallMode-apk-${{ github.run_number }}-${{ github.run_attempt }}
-    defaults:
-      run:
-        shell: bash
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           persist-credentials: false
-
       - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
         with:
           distribution: temurin
           java-version: '17'
-
-      - name: Install Android SDK packages
+      - name: Install Android SDK
         run: '"$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-36" "build-tools;36.0.0"'
-
       - name: Unit tests
         run: ./gradlew --no-daemon --max-workers=1 testDebugUnitTest
+      - name: Android lint
+        run: ./gradlew --no-daemon --max-workers=1 lintDebug
+      - name: Build debug APK
+        run: ./gradlew --no-daemon --max-workers=1 assembleDebug
+      - name: Package debug APK and checksum
+        run: |
+          mkdir -p artifacts
+          cp app/build/outputs/apk/debug/app-debug.apk artifacts/WallMode-debug.apk
+          cd artifacts
+          sha256sum WallMode-debug.apk > WallMode-debug.apk.sha256
+      - name: Upload debug APK
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: WallMode-debug-${{ github.run_number }}-${{ github.run_attempt }}
+          path: |
+            artifacts/WallMode-debug.apk
+            artifacts/WallMode-debug.apk.sha256
+          if-no-files-found: error
+          retention-days: 30
 
+  prerelease:
+    needs: verify
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.publish_prerelease && github.ref == 'refs/heads/master' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Install Android SDK
+        run: '"$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-36" "build-tools;36.0.0"'
       - name: Restore release signing
         env:
           KEYSTORE_BASE64: ${{ secrets.WALLMODE_KEYSTORE_BASE64 }}
@@ -44,18 +79,11 @@ jobs:
           mkdir -p keystore
           printf '%s' "$KEYSTORE_BASE64" | base64 --decode > keystore/wallmode-release.jks
           printf '%s' "$SIGNING_PROPERTIES_BASE64" | base64 --decode > keystore/signing.properties
-
       - name: Build release APK
         run: ./gradlew --no-daemon --max-workers=1 assembleRelease
-
       - name: Release lint
         run: ./gradlew --no-daemon --max-workers=1 lintRelease
-
-      - name: Remove signing files
-        if: always()
-        run: rm -f keystore/wallmode-release.jks keystore/signing.properties
-
-      - name: Verify and package APK
+      - name: Verify and package signed APK
         run: |
           apk=app/build/outputs/apk/release/app-release.apk
           "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose --print-certs "$apk"
@@ -65,35 +93,13 @@ jobs:
           cp "$apk" "artifacts/$name"
           cd artifacts
           sha256sum "$name" > "$name.sha256"
-
-      - name: Upload signed APK
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
-        with:
-          name: WallMode-apk-${{ github.run_number }}-${{ github.run_attempt }}
-          path: |
-            artifacts/*.apk
-            artifacts/*.sha256
-          if-no-files-found: error
-          retention-days: 30
-
-  publish:
-    needs: apk
-    if: github.ref == 'refs/heads/master'
-    runs-on: ubuntu-24.04
-    timeout-minutes: 10
-    permissions:
-      actions: read
-      contents: write
-    env:
-      GH_TOKEN: ${{ github.token }}
-      GH_REPO: ${{ github.repository }}
-      ARTIFACT_NAME: ${{ needs.apk.outputs.artifact-name }}
-    steps:
-      - name: Download verified APK
-        run: gh run download "$GITHUB_RUN_ID" --name "$ARTIFACT_NAME" --dir artifacts
-
-      - name: Publish development release
-        shell: bash
+      - name: Remove signing files
+        if: always()
+        run: rm -f keystore/wallmode-release.jks keystore/signing.properties
+      - name: Publish signed development pre-release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
         run: |
           cd artifacts
           sha256sum --check ./*.sha256
@@ -102,10 +108,4 @@ jobs:
             --target "$GITHUB_SHA" \
             --title "WallMode development build ${GITHUB_RUN_NUMBER}.${GITHUB_RUN_ATTEMPT}" \
             --prerelease --latest=false \
-            --notes "Automated signed development APK from commit $GITHUB_SHA.
-
-          Download the APK under Assets and install it on Android 8.0 or newer. The SHA-256 checksum is included; source archives match this build's tag.
-
-          Unit tests, release lint, APK signature and alignment checks passed. This is not a stable release: extended physical-device and Home Assistant acceptance checks remain open. See RELEASING.md at this tag for the full outstanding checklist, including media provenance and backup rules.
-
-          The app version is set in app/build.gradle.kts and is not automatically increased. These pre-releases are for manual installation, not the in-app stable update channel."
+            --notes "Signed development APK. Debug tests and lint passed. Physical-device acceptance is still required."
