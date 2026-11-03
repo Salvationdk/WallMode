@@ -4,15 +4,15 @@
 
 Turn an Android tablet into a reliable, remotely manageable wall display.
 
-[Source on GitHub](https://github.com/rvbcrs/WallMode) · [Report an issue](https://github.com/rvbcrs/WallMode/issues)
+[Source on GitHub](https://github.com/Salvationdk/WallMode) · [Report an issue](https://github.com/Salvationdk/WallMode/issues)
 
-WallMode is a free, open-source Android kiosk app for Home Assistant, GlassHome, and other web dashboards. It keeps a dashboard visible in an embedded Android WebView, adds native recovery when the page fails, and can switch to a dimmed or animated ambient display when the tablet is idle.
+WallMode is a free, open-source Android kiosk app for Home Assistant, GlassHome, and other web dashboards. This repository is a fork of [rvbcrs/WallMode](https://github.com/rvbcrs/WallMode); original authorship and license are retained. It keeps a dashboard visible in an embedded Android WebView, adds native recovery when the page fails, and can switch to a dimmed or animated ambient display when the tablet is idle.
 
 Home Assistant is optional: any valid HTTP or HTTPS dashboard can be used. Home Assistant users additionally get local server discovery, MQTT device discovery, telemetry, controls, and temporary event takeovers.
 
 WallMode targets Android 8.0 and newer. Its primary physical test device is the Lenovo ThinkSmart View.
 
-> **Project status:** WallMode is in early development. Download a signed development APK from [Releases](https://github.com/rvbcrs/WallMode/releases). These pre-releases are not stable releases.
+> **Project status:** WallMode is in early development. Test APKs are available as artifacts from [GitHub Actions](https://github.com/Salvationdk/WallMode/actions/workflows/build-apk.yml) after successful builds. Signed pre-releases are published only when explicitly requested by the repository owner. Neither is a stable release.
 
 ## Support WallMode
 
@@ -534,34 +534,29 @@ a task runs out of heap, review the measured usage before raising limits or retr
 
 ### Automatic APK builds
 
-Every push to this repository (including branches and tags) runs
-[Build signed APK](https://github.com/rvbcrs/WallMode/actions/workflows/build-apk.yml).
-It runs unit tests and release lint, builds with the existing release key, verifies
-the APK signature and alignment, and uploads the APK plus its SHA-256 checksum.
-You can also start a build with **Run workflow**.
+Pushes to `master`, pull requests, and manual **Run workflow** runs execute
+[Build and test WallMode](https://github.com/Salvationdk/WallMode/actions/workflows/build-apk.yml).
+CI runs unit tests and Android lint, builds a debug APK, and uploads the APK and
+SHA-256 checksum as an **Artifacts** download (retained for 30 days).
+Download the artifact from the workflow run in GitHub. This is a development/debug
+build, not a signed production release.
 
-Successful builds of `master` also publish a pre-release under
-[Releases](https://github.com/rvbcrs/WallMode/releases). Download the `.apk` directly
-under **Assets**, without a GitHub login. Each release has its own build tag,
-source archives and SHA-256 checksum. Other branches and tag pushes only produce
-Actions artifacts. Pre-releases are installed manually; the in-app updater uses
-stable releases.
+To publish a **signed development pre-release**, run the workflow manually from
+`master` and enable **publish_prerelease**. This is opt-in and requires both
+repository Actions secrets:
 
-All builds also keep **WallMode-apk-...** under the successful run's **Artifacts**
-for 30 days; downloading those artifacts requires a GitHub login.
-The APK filename includes the commit ID; the app version still comes from
-`app/build.gradle.kts` and is not automatically increased.
+- `WALLMODE_KEYSTORE_BASE64`: base64 of `keystore/wallmode-release.jks`.
+- `WALLMODE_SIGNING_PROPERTIES_BASE64`: base64 of `keystore/signing.properties`,
+  with `storeFile=keystore/wallmode-release.jks` and the correct credentials.
 
-Repository maintainers must configure these Actions secrets using the same key
-as previous releases, never a newly generated key for each build:
+The pre-release build verifies unit tests, lint, APK signature, and alignment.
+Signing secrets are never required for ordinary debug/CI builds and are not
+used for pull requests. Signed pre-releases appear under
+[Releases](https://github.com/Salvationdk/WallMode/releases), not in the stable
+in-app update feed. The Android version and versionCode remain controlled by
+`app/build.gradle.kts`; increase versionCode for install-over updates.
 
-- `WALLMODE_KEYSTORE_BASE64`: base64 contents of `keystore/wallmode-release.jks`.
-- `WALLMODE_SIGNING_PROPERTIES_BASE64`: base64 contents of `keystore/signing.properties`,
-  with `storeFile=keystore/wallmode-release.jks` and the matching alias/passwords.
-
-Missing secrets fail the build; there is no unsigned fallback. Signing files are
-removed before artifact upload. No pull-request event receives the signing secrets.
-Before promoting a build to a stable release, complete [RELEASING.md](RELEASING.md).
+Before announcing a stable release, complete [RELEASING.md](RELEASING.md).
 
 ### APK location and installation
 
