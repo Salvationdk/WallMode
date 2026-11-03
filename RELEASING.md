@@ -1,20 +1,22 @@
 # First WallMode Android release
 
-WallMode source is hosted at https://github.com/rvbcrs/WallMode. Successful CI builds
-of `master` publish signed development APKs as GitHub pre-releases, with a unique
-`build-RUN-ATTEMPT` tag pointing to the exact source commit. Branch/tag builds only
-upload Actions artifacts. Pre-releases are not offered by the stable in-app updater.
+This fork is maintained at https://github.com/Salvationdk/WallMode.
+Pushes to `master` and pull requests run unit tests, lint, and a debug APK build.
+Signed development pre-releases require a manual **Run workflow** from `master`
+with `publish_prerelease` enabled and both signing secrets configured.
+Such builds are tagged `build-RUN-ATTEMPT`; they are not offered by the stable
+in-app updater. Debug CI artifacts are for testing only.
 
-CI verifies unit tests, release lint, APK signing and alignment from a clean
-checkout. This does not complete the checklist below: device acceptance, media
-provenance and backup rules remain open. Do not present an automated build as a
-stable release until those checks are complete.
+Neither a successful debug build nor a signed APK proves device acceptance.
+Physical-device checks, Home Assistant integration, media provenance, and backup
+rules must be verified before a stable release.
 
 ## Before tagging
 
-- Confirm the destination repository: `origin` is `rvbcrs/WallMode`; the inherited
-  KioskZen remote remains `upstream`. Never publish a WallMode release to
-  `upstream` or push all inherited tags. The app's update default is `rvbcrs/WallMode`.
+- Confirm the destination repository is `Salvationdk/WallMode`. The original
+  upstream WallMode and inherited KioskZen history must keep their attribution.
+  Do not publish releases or push inherited tags to another repository.
+  The app's update default is `Salvationdk/WallMode`.
 - Include all WallMode sources, resources, tests, blueprints and documentation
   in the release commit. Verify a build from a clean checkout.
 - Document redistribution permission and attribution for bundled media,
