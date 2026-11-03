@@ -1158,7 +1158,7 @@ class KioskPreferences(context: Context) {
         const val DEFAULT_WATCHDOG_PING_PATH = "api/"
         const val DEFAULT_WATCHDOG_PING_INTERVAL_SECONDS = 45
         const val DEFAULT_UPDATES_ENABLED = false
-        const val DEFAULT_UPDATES_REPO = "rvbcrs/WallMode"
+        const val DEFAULT_UPDATES_REPO = "Salvationdk/WallMode"
         private const val LEGACY_UPDATES_REPO = "exraaaa/KioskZen"
         const val DEFAULT_UPDATE_CHECK_INTERVAL_HOURS = 12
         const val DEFAULT_ALLOW_MIXED_CONTENT = true
