@@ -2,6 +2,18 @@
 
 # WallMode
 
+<!-- BEGIN: Salvationdk repository metrics -->
+[![Release downloads](https://img.shields.io/github/downloads/Salvationdk/WallMode/total?label=Release%20downloads&style=flat-square)](https://github.com/Salvationdk/WallMode/releases)
+[![Stars](https://img.shields.io/github/stars/Salvationdk/WallMode?style=flat-square)](https://github.com/Salvationdk/WallMode/stargazers)
+[![Forks](https://img.shields.io/github/forks/Salvationdk/WallMode?style=flat-square)](https://github.com/Salvationdk/WallMode/forks)
+[![Issues](https://img.shields.io/github/issues/Salvationdk/WallMode?style=flat-square)](https://github.com/Salvationdk/WallMode/issues)
+[![Pull requests](https://img.shields.io/github/issues-pr/Salvationdk/WallMode?style=flat-square)](https://github.com/Salvationdk/WallMode/pulls)
+[![Last commit](https://img.shields.io/github/last-commit/Salvationdk/WallMode?style=flat-square)](https://github.com/Salvationdk/WallMode/commits)
+
+<sub>Release-downloads gælder kun GitHub Releases' vedhæftede filer. Besøg og kloninger ses via [Insights → Traffic](https://github.com/Salvationdk/WallMode/graphs/traffic) for autoriserede brugere.</sub>
+<!-- END: Salvationdk repository metrics -->
+
+
 Turn an Android tablet into a reliable, remotely manageable wall display.
 
 [Source on GitHub](https://github.com/Salvationdk/WallMode) · [Report an issue](https://github.com/Salvationdk/WallMode/issues)
